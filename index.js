@@ -12,24 +12,21 @@ var utils = require('engine-utils');
  * Requires cache.
  */
 
-
 var requires = {};
-
 
 /**
  * Handlebars support.
  */
 
-var engine = utils.fromStringRenderer('handlebars');
-
+var engine = module.exports = utils.fromStringRenderer('handlebars');
 
 /**
  * Handlebars string support. Render the given `str` and invoke the callback `cb(err, str)`.
  *
  * ```js
  * var engine = require('engine-handlebars');
- * engine.render('{{name}}', {name: 'Jon Schlinkert'}, function (err, content) {
- *   console.log(content); //=> 'Jon Schlinkert'
+ * engine.render('{{name}}', {name: 'Jon'}, function (err, content) {
+ *   console.log(content); //=> 'Jon'
  * });
  * ```
  *
@@ -56,8 +53,6 @@ engine.render = function render(str, options, cb) {
   }
 
   try {
-    var path = options.filename;
-
     for (var partial in opts.partials) {
       handlebars.registerPartial(partial, opts.partials[partial]);
     }
@@ -65,10 +60,10 @@ engine.render = function render(str, options, cb) {
       handlebars.registerHelper(helper, opts.helpers[helper]);
     }
 
-    var tmpl = opts.cache ? utils.cache[path] || (utils.cache[path] = handlebars.compile(str)) : handlebars.compile(str);
-    cb(null, tmpl(opts), '.html');
+    cb(null,  handlebars.compile(str)(opts), '.html');
   } catch (err) {
     cb(err);
+    return;
   }
 };
 
@@ -76,6 +71,11 @@ engine.render = function render(str, options, cb) {
 /**
  * Synchronously render Handlebars or templates.
  *
+ * ```js
+ * var engine = require('engine-handlebars');
+ * engine.renderSync('<%= name %>', {name: 'Jon'});
+ * //=> 'Jon'
+ * ```
  * @param  {Object} `str` The string to render.
  * @param  {Object} `options` Object of options.
  *   @option {Object} `settings` Settings to pass to Lo-Dash.
@@ -90,12 +90,7 @@ engine.renderSync = function renderSync(str, options) {
   var opts = options || {};
 
   try {
-    var path = options.filename;
-    var tmpl = opts.cache ?
-      utils.cache[path] || (utils.cache[path] = handlebars.compile(str)) :
-      handlebars.compile(str);
-
-    return tmpl(opts);
+    return handlebars.compile(str)(opts);
   } catch (err) {
     return err;
   }
@@ -104,6 +99,12 @@ engine.renderSync = function renderSync(str, options) {
 
 /**
  * Handlebars file support. Render a file at the given `path` and callback `cb(err, str)`.
+ *
+ * ```js
+ * var engine = require('engine-handlebars');
+ * engine.renderSync('foo/bar/baz.tmpl', {name: 'Jon'});
+ * //=> 'Jon'
+ * ```
  *
  * @param {String} `path`
  * @param {Object|Function} `options` or callback function.
@@ -117,34 +118,17 @@ engine.renderFile = function renderFile(path, options, cb) {
     options = {};
   }
 
-  var key = path + ':string';
   var opts = options || {};
-
   try {
-    opts.filename = path;
-
-    var str = opts.cache ?
-      utils.cache[path] || (utils.cache[path] = fs.readFileSync(path, 'utf8')) :
-      fs.readFileSync(path, 'utf8');
-
-    engine.render(str, opts, cb);
+    engine.render(fs.readFileSync(path, 'utf8'), opts, cb);
   } catch (err) {
     cb(err);
+    return;
   }
 };
-
-engine.cache = {};
-
 
 /**
  * Express support.
  */
 
 engine.__express = engine.renderFile;
-
-
-/**
- * Expose `engine`
- */
-
-module.exports = engine;
