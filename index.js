@@ -20,6 +20,19 @@ var requires = {};
 
 var engine = module.exports = utils.fromStringRenderer('handlebars');
 
+engine.compile = function compile(str, settings) {
+  var handlebars = require.handlebars || (require.handlebars = require('handlebars'));
+  settings = settings || {};
+  for (var partial in settings.partials) {
+    handlebars.registerPartial(partial, settings.partials[partial]);
+  }
+  for (var helper in settings.helpers) {
+    handlebars.registerHelper(helper, settings.helpers[helper]);
+  }
+  if (typeof str === 'function') return str;
+  return handlebars.compile(str);
+}
+
 /**
  * Handlebars string support. Render the given `str` and invoke the callback `cb(err, str)`.
  *
@@ -38,29 +51,18 @@ var engine = module.exports = utils.fromStringRenderer('handlebars');
  * @api public
  */
 
-engine.render = function render(str, options, cb) {
+engine.render = function render(str, context, cb) {
   var handlebars = requires.handlebars || (requires.handlebars = require('handlebars'));
-  if (typeof options === 'function') {
-    cb = options;
-    options = {};
+  if (typeof context === 'function') {
+    cb = context;
+    context = {};
   }
 
-  var opts = options || {};
-
-  // cache requires .filename
-  if (opts.cache && !opts.filename) {
-    return cb(new Error('the "filename" option is required for caching'));
-  }
+  context = context || {};
 
   try {
-    for (var partial in opts.partials) {
-      handlebars.registerPartial(partial, opts.partials[partial]);
-    }
-    for (var helper in opts.helpers) {
-      handlebars.registerHelper(helper, opts.helpers[helper]);
-    }
-
-    cb(null,  handlebars.compile(str)(opts), '.html');
+    var fn = (typeof str === 'function' ? str : engine.compile(str, context));
+    cb(null,  fn(context), '.html');
   } catch (err) {
     cb(err);
     return;
@@ -85,12 +87,13 @@ engine.render = function render(str, options, cb) {
  * @api public
  */
 
-engine.renderSync = function renderSync(str, options) {
+engine.renderSync = function renderSync(str, context) {
   var handlebars = requires.handlebars || (requires.handlebars = require('handlebars'));
-  var opts = options || {};
+  context = context || {};
 
   try {
-    return handlebars.compile(str)(opts);
+    var fn = (typeof str === 'function' ? str : engine.compile(str, context));
+    return fn(context);
   } catch (err) {
     return err;
   }
