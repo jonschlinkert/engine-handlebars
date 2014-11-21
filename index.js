@@ -21,7 +21,8 @@ var requires = {};
 var engine = module.exports = utils.fromStringRenderer('handlebars');
 
 /**
- * Handlebars string support. Compile the given `str` and register helpers and partials from settings
+ * Handlebars string support. Compile the given `str` and register
+ * helpers and partials from settings
  *
  * ```js
  * var engine = require('engine-handlebars');
@@ -44,10 +45,11 @@ engine.compile = function compile(str, settings) {
   }
   if (typeof str === 'function') return str;
   return handlebars.compile(str);
-}
+};
 
 /**
- * Handlebars string support. Render the given `str` and invoke the callback `cb(err, str)`.
+ * Handlebars string support. Render the given `str` and invoke
+ * the callback `cb(err, str)`.
  *
  * ```js
  * var engine = require('engine-handlebars');
@@ -80,7 +82,6 @@ engine.render = function render(str, context, cb) {
   }
 };
 
-
 /**
  * Synchronously render Handlebars templates.
  *
@@ -107,9 +108,9 @@ engine.renderSync = function renderSync(str, context) {
   }
 };
 
-
 /**
- * Handlebars file support. Render a file at the given `path` and callback `cb(err, str)`.
+ * Handlebars file support. Render a file at the given `path`
+ * and callback `cb(err, str)`.
  *
  * ```js
  * var engine = require('engine-handlebars');
