@@ -6,7 +6,6 @@
 
 var fs = require('fs');
 var utils = require('engine-utils');
-var diff = require('arr-diff');
 
 /**
  * Requires cache.
@@ -25,12 +24,6 @@ var engine = module.exports = utils.fromStringRenderer('handlebars');
  */
 
 engine.Handlebars = require.Handlebars || (require.Handlebars = require('handlebars'));
-
-/**
- * Store a copy of helper keys
- */
-
-var originalHelpers = Object.keys(engine.Handlebars.helpers);
 
 /**
  * Handlebars string support. Compile the given `str` and register
