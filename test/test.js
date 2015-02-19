@@ -27,13 +27,8 @@ describe('.Handlebars', function () {
 
     var ctx = {name: 'Jon Schlinkert'};
 
-    // engine.render('{{blah name}}', ctx, function (err, content) {
-    //   content.should.equal('Jon Schlinkert');
-    //   done();
-    // });
-    engine.render('{{#if foo}}{{name}}{{else}}None.{{/if}}', ctx, function (err, content) {
-      console.log(err)
-      content.should.equal('None.');
+    engine.render('{{blah name}}', ctx, function (err, content) {
+      content.should.equal('jon schlinkert');
       done();
     });
   });
