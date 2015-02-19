@@ -10,12 +10,39 @@
 var fs = require('fs');
 var path = require('path');
 var should = require('should');
-var handlebars = require('..');
+var engine = require('..');
+
+
+describe('.Handlebars', function () {
+  it('should expose the engine.', function () {
+    var Handlebars = engine.Handlebars;
+    Handlebars.should.have.properties(['compile', 'SafeString']);
+  });
+
+  it('should allow helpers to registered with the engine.', function (done) {
+    var Handlebars = engine.Handlebars;
+    Handlebars.registerHelper('blah', function (str) {
+      return str.toLowerCase();
+    });
+
+    var ctx = {name: 'Jon Schlinkert'};
+
+    // engine.render('{{blah name}}', ctx, function (err, content) {
+    //   content.should.equal('Jon Schlinkert');
+    //   done();
+    // });
+    engine.render('{{#if foo}}{{name}}{{else}}None.{{/if}}', ctx, function (err, content) {
+      console.log(err)
+      content.should.equal('None.');
+      done();
+    });
+  });
+});
 
 
 describe('.renderSync()', function () {
   it('should render templates.', function () {
-    var str = handlebars.renderSync('Jon {{ name }}', {name: 'Schlinkert'});
+    var str = engine.renderSync('Jon {{ name }}', {name: 'Schlinkert'});
     str.should.equal('Jon Schlinkert');
   });
 });
@@ -25,7 +52,7 @@ describe('.render()', function() {
   it('should render templates.', function(done) {
     var ctx = {name: 'Jon Schlinkert'};
 
-    handlebars.render('{{ name }}', ctx, function (err, content) {
+    engine.render('{{ name }}', ctx, function (err, content) {
       content.should.equal('Jon Schlinkert');
       done();
     });
@@ -45,7 +72,7 @@ describe('.render()', function() {
       }
     };
 
-    handlebars.render('{{upper (include "content.hbs")}}', ctx, function (err, content) {
+    engine.render('{{upper (include "content.hbs")}}', ctx, function (err, content) {
       if (err) console.log(err);
 
       content.should.equal('JON SCHLINKERT');
@@ -61,7 +88,7 @@ describe('.render()', function() {
       }
     };
 
-    handlebars.render('{{> a }}{{> b }}', ctx, function (err, content) {
+    engine.render('{{> a }}{{> b }}', ctx, function (err, content) {
       if (err) console.log(err);
       content.should.equal('foobar');
       done();
@@ -74,7 +101,7 @@ describe('.renderFile()', function() {
   it('should render templates from a file.', function(done) {
     var ctx = {name: 'Jon Schlinkert'};
 
-    handlebars.renderFile('test/fixtures/default.hbs', ctx, function (err, content) {
+    engine.renderFile('test/fixtures/default.hbs', ctx, function (err, content) {
       content.should.equal('Jon Schlinkert');
       done();
     });

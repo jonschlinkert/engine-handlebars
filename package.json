@@ -33,6 +33,7 @@
     "should": "^4.0.4"
   },
   "dependencies": {
+    "arr-diff": "^1.0.1",
     "engine-utils": "^0.1.0",
     "handlebars": "^2.0.0"
   },
