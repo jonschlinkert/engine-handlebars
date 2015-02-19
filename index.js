@@ -7,7 +7,6 @@
 var fs = require('fs');
 var utils = require('engine-utils');
 
-
 /**
  * Requires cache.
  */
@@ -19,6 +18,12 @@ var requires = {};
  */
 
 var engine = module.exports = utils.fromStringRenderer('handlebars');
+
+/**
+ * Expose `Handlebars`, to give users access to the same instance
+ */
+
+engine.Handlebars = require.Handlebars || (require.Handlebars = require('handlebars'));
 
 /**
  * Handlebars string support. Compile the given `str` and register
@@ -35,7 +40,7 @@ var engine = module.exports = utils.fromStringRenderer('handlebars');
  */
 
 engine.compile = function compile(str, settings) {
-  var handlebars = require.handlebars || (require.handlebars = require('handlebars'));
+  var handlebars = engine.Handlebars;
   settings = settings || {};
   for (var partial in settings.partials) {
     handlebars.registerPartial(partial, settings.partials[partial]);
@@ -65,7 +70,7 @@ engine.compile = function compile(str, settings) {
  */
 
 engine.render = function render(str, context, cb) {
-  var handlebars = requires.handlebars || (requires.handlebars = require('handlebars'));
+  var handlebars = engine.Handlebars;
   if (typeof context === 'function') {
     cb = context;
     context = {};
@@ -97,7 +102,7 @@ engine.render = function render(str, context, cb) {
  */
 
 engine.renderSync = function renderSync(str, context) {
-  var handlebars = requires.handlebars || (requires.handlebars = require('handlebars'));
+  var handlebars = engine.Handlebars;
   context = context || {};
 
   try {
