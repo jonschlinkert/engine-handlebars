@@ -1,15 +1,15 @@
 /*!
  * engine-handlebars <https://github.com/jonschlinkert/engine-handlebars>
  *
- * Copyright (c) 2014 Jon Schlinkert, contributors.
- * Licensed under the MIT license.
+ * Copyright (c) 2014-2015, Jon Schlinkert.
+ * Licensed under the MIT License.
  */
 
 'use strict';
 
 var fs = require('fs');
 var path = require('path');
-var should = require('should');
+require('should');
 var engine = require('..');
 
 
@@ -102,4 +102,3 @@ describe('.renderFile()', function() {
     });
   });
 });
-
