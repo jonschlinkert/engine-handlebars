@@ -1,7 +1,7 @@
 {
   "name": "engine-handlebars",
   "description": "Handlebars engine, consolidate.js style but with enhancements. This works with Assemble, express.js, engine-cache or any application that follows consolidate.js conventions.",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "homepage": "https://github.com/jonschlinkert/engine-handlebars",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/engine-handlebars",
