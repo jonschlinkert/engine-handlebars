@@ -1,25 +1,14 @@
 {
   "name": "engine-handlebars",
   "description": "Handlebars engine, consolidate.js style but with enhancements. This works with Assemble, express.js, engine-cache or any application that follows consolidate.js conventions.",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "homepage": "https://github.com/jonschlinkert/engine-handlebars",
-  "author": {
-    "name": "Jon Schlinkert",
-    "url": "https://github.com/jonschlinkert"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/jonschlinkert/engine-handlebars.git"
-  },
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/engine-handlebars",
   "bugs": {
     "url": "https://github.com/jonschlinkert/engine-handlebars/issues"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://github.com/jonschlinkert/engine-handlebars/blob/master/LICENSE"
-    }
-  ],
+  "license": "MIT",
   "files": [
     "index.js"
   ],
@@ -32,7 +21,7 @@
   },
   "dependencies": {
     "engine-utils": "^0.1.0",
-    "handlebars": "^3.0.0"
+    "handlebars": "^4.0.2"
   },
   "devDependencies": {
     "mocha": "*",
@@ -52,5 +41,16 @@
     "compile",
     "render",
     "process"
-  ]
+  ],
+  "verb": {
+    "related": {
+      "list": [
+        "template-helpers",
+        "handlebars-helpers",
+        "assemble",
+        "templates",
+        "helper-cache"
+      ]
+    }
+  }
 }
