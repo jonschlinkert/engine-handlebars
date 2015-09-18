@@ -8,12 +8,6 @@ var fs = require('fs');
 var utils = require('engine-utils');
 
 /**
- * Requires cache.
- */
-
-var requires = {};
-
-/**
  * Handlebars support.
  */
 
@@ -70,7 +64,6 @@ engine.compile = function compile(str, settings) {
  */
 
 engine.render = function render(str, context, cb) {
-  var handlebars = engine.Handlebars;
   if (typeof context === 'function') {
     cb = context;
     context = {};
@@ -102,7 +95,6 @@ engine.render = function render(str, context, cb) {
  */
 
 engine.renderSync = function renderSync(str, context) {
-  var handlebars = engine.Handlebars;
   context = context || {};
 
   try {

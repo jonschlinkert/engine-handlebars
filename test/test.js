@@ -1,15 +1,9 @@
-/*!
- * engine-handlebars <https://github.com/jonschlinkert/engine-handlebars>
- *
- * Copyright (c) 2014-2015, Jon Schlinkert.
- * Licensed under the MIT License.
- */
-
 'use strict';
 
+require('mocha');
+require('should');
 var fs = require('fs');
 var path = require('path');
-require('should');
 var engine = require('..');
 
 
