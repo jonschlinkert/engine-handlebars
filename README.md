@@ -16,14 +16,14 @@ var handlebars = require('engine-handlebars');
 
 ## API
 
-### [.compile](index.js#L42)
+### [.compile](index.js#L45)
 
 Handlebars string support. Compile the given `str` and register helpers and partials from settings
 
 **Params**
 
-* `str` **{String}**
-* `settings` **{Object}**: object containing optional helpers and partials
+* `str` **{String}**: String or compiled function.
+* `options` **{Object}**: object containing optional helpers and partials
 
 **Example**
 
@@ -32,14 +32,14 @@ var engine = require('engine-handlebars');
 var fn = engine.compile('{{name}}', {});
 ```
 
-### [.render](index.js#L72)
+### [.render](index.js#L74)
 
 Handlebars string support. Render the given `str` and invoke the callback `cb(err, str)`.
 
 **Params**
 
-* `str` **{String|function}**
-* `context` **{Object|Function}**: or callback.
+* `str` **{String|Function}**: String or compiled function.
+* `locals` **{Object|Function}**: or callback.
 * `cb` **{Function}**: callback function.
 
 **Example**
@@ -51,14 +51,14 @@ engine.render('{{name}}', {name: 'Jon'}, function (err, content) {
 });
 ```
 
-### [.renderSync](index.js#L104)
+### [.renderSync](index.js#L106)
 
 Synchronously render Handlebars templates.
 
 **Params**
 
 * `str` **{Object|Function}**: The string to render or compiled function.
-* `context` **{Object}**
+* `locals` **{Object}**
 * `returns` **{String}**: Rendered string.
 
 **Example**
@@ -69,14 +69,14 @@ engine.renderSync('<%= name %>', {name: 'Jon'});
 //=> 'Jon'
 ```
 
-### [.renderFile](index.js#L132)
+### [.renderFile](index.js#L133)
 
 Handlebars file support. Render a file at the given `path` and callback `cb(err, str)`.
 
 **Params**
 
-* `path` **{String}**
-* `options` **{Object|Function}**: or callback function.
+* `path` **{String}**: Filepath
+* `locals` **{Object|Function}**: or callback function.
 * `cb` **{Function}**: callback function
 
 **Example**
@@ -85,6 +85,30 @@ Handlebars file support. Render a file at the given `path` and callback `cb(err,
 var engine = require('engine-handlebars');
 engine.renderSync('foo/bar/baz.tmpl', {name: 'Jon'});
 //=> 'Jon'
+```
+
+### [.renderVinyl](index.js#L161)
+
+[Vinyl][] file support. Render tempates in the `contents` of the given `file` and invoke the callback `cb(err, file)`. If the file has a `data` object, it will be merged with locals and passed to templates as context. `data` wins over `locals`.
+
+**Params**
+
+* `file` **{Object}**: Vinyl file.
+* `locals` **{Object|Function}**: or callback.
+* `cb` **{Function}**: callback function.
+
+**Example**
+
+```js
+var engine = require('engine-handlebars');
+var file = new File({
+  path: 'foo.hbs',
+  contents: new Buffer('{{name}}')
+});
+engine.renderVinyl(file, {name: 'Foo'}, function (err, res) {
+  console.log(res.contents.toString())
+  //=> 'Foo'
+});
 ```
 
 ## Related projects
