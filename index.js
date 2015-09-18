@@ -5,6 +5,7 @@
  */
 
 var fs = require('fs');
+var extend = require('extend-shallow');
 var utils = require('engine-utils');
 
 /**
@@ -12,6 +13,15 @@ var utils = require('engine-utils');
  */
 
 var engine = module.exports = utils.fromStringRenderer('handlebars');
+
+/**
+ * Engine options
+ */
+
+engine.options = {
+  src: {ext: '.hbs'},
+  dest: {ext: '.html'}
+};
 
 /**
  * Expose `Handlebars`, to give users access to the same instance
@@ -27,20 +37,19 @@ engine.Handlebars = require.Handlebars || (require.Handlebars = require('handleb
  * var engine = require('engine-handlebars');
  * var fn = engine.compile('{{name}}', {});
  * ```
- *
- * @param {String} `str`
- * @param {Object} `settings` object containing optional helpers and partials
+ * @param {String} `str` String or compiled function.
+ * @param {Object} `options` object containing optional helpers and partials
  * @api public
  */
 
-engine.compile = function compile(str, settings) {
+engine.compile = function compile(str, options) {
   var handlebars = engine.Handlebars;
-  settings = settings || {};
-  for (var partial in settings.partials) {
-    handlebars.registerPartial(partial, settings.partials[partial]);
+  options = options || {};
+  for (var partial in options.partials) {
+    handlebars.registerPartial(partial, options.partials[partial]);
   }
-  for (var helper in settings.helpers) {
-    handlebars.registerHelper(helper, settings.helpers[helper]);
+  for (var helper in options.helpers) {
+    handlebars.registerHelper(helper, options.helpers[helper]);
   }
   if (typeof str === 'function') return str;
   return handlebars.compile(str);
@@ -56,24 +65,24 @@ engine.compile = function compile(str, settings) {
  *   console.log(content); //=> 'Jon'
  * });
  * ```
- *
- * @param {String|function} `str`
- * @param {Object|Function} `context` or callback.
+ * @param {String|Function} `str` String or compiled function.
+ * @param {Object|Function} `locals` or callback.
  * @param {Function} `cb` callback function.
  * @api public
  */
 
-engine.render = function render(str, context, cb) {
-  if (typeof context === 'function') {
-    cb = context;
-    context = {};
+engine.render = function render(str, locals, cb) {
+  if (typeof locals === 'function') {
+    cb = locals;
+    locals = {};
   }
 
-  context = context || {};
-
   try {
-    var fn = (typeof str === 'function' ? str : engine.compile(str, context));
-    cb(null,  fn(context), '.html');
+    var fn = typeof str !== 'function'
+      ? engine.compile(str, locals)
+      : str;
+
+    cb(null,  fn(locals));
   } catch (err) {
     cb(err);
     return;
@@ -89,17 +98,17 @@ engine.render = function render(str, context, cb) {
  * //=> 'Jon'
  * ```
  * @param  {Object|Function} `str` The string to render or compiled function.
- * @param  {Object} `context`
+ * @param  {Object} `locals`
  * @return {String} Rendered string.
  * @api public
  */
 
-engine.renderSync = function renderSync(str, context) {
-  context = context || {};
+engine.renderSync = function renderSync(str, locals) {
+  locals = locals || {};
 
   try {
-    var fn = (typeof str === 'function' ? str : engine.compile(str, context));
-    return fn(context);
+    var fn = (typeof str === 'function' ? str : engine.compile(str, locals));
+    return fn(locals);
   } catch (err) {
     return err;
   }
@@ -115,25 +124,61 @@ engine.renderSync = function renderSync(str, context) {
  * //=> 'Jon'
  * ```
  *
- * @param {String} `path`
- * @param {Object|Function} `options` or callback function.
+ * @param {String} `path` Filepath
+ * @param {Object|Function} `locals` or callback function.
  * @param {Function} `cb` callback function
  * @api public
  */
 
-engine.renderFile = function renderFile(path, options, cb) {
-  if (typeof options === 'function') {
-    cb = options;
-    options = {};
+engine.renderFile = function renderFile(fp, locals, cb) {
+  engine.render(fs.readFileSync(fp, 'utf8'), locals, cb);
+};
+
+/**
+ * [Vinyl][] file support. Render tempates in the `contents`
+ * of the given `file` and invoke the callback `cb(err, file)`.
+ * If the file has a `data` object, it will be merged with
+ * locals and passed to templates as context. `data` wins over
+ * `locals`.
+ *
+ * ```js
+ * var engine = require('engine-handlebars');
+ * var file = new File({
+ *   path: 'foo.hbs',
+ *   contents: new Buffer('{{name}}')
+ * });
+ * engine.renderVinyl(file, {name: 'Foo'}, function (err, res) {
+ *   console.log(res.contents.toString())
+ *   //=> 'Foo'
+ * });
+ * ```
+ * @param {Object} `file` Vinyl file.
+ * @param {Object|Function} `locals` or callback.
+ * @param {Function} `cb` callback function.
+ * @api public
+ */
+
+engine.renderVinyl = function renderVinyl(file, locals, cb) {
+  if (typeof locals === 'function') {
+    cb = locals;
+    locals = {};
   }
 
-  var opts = options || {};
-  try {
-    engine.render(fs.readFileSync(path, 'utf8'), opts, cb);
-  } catch (err) {
-    cb(err);
-    return;
+  if (typeof file !== 'object' || (!file._isVinyl && !file.isView)) {
+    return cb(new Error('expected a vinyl file.'));
   }
+
+  var str = typeof file.fn !== 'function'
+    ? file.contents.toString()
+    : file.fn;
+
+  var ctx = extend({}, locals, file.data);
+  engine.render(str, ctx, function(err, res) {
+    if (err) return cb(err);
+
+    file.contents = new Buffer(res);
+    cb(null, file);
+  });
 };
 
 /**
