@@ -9,6 +9,12 @@ var extend = require('extend-shallow');
 var utils = require('engine-utils');
 
 /**
+ * Requires cache
+ */
+
+var requires = {};
+
+/**
  * Handlebars support.
  */
 
@@ -27,7 +33,7 @@ engine.options = {
  * Expose `Handlebars`, to give users access to the same instance
  */
 
-engine.Handlebars = require.Handlebars || (require.Handlebars = require('handlebars'));
+engine.Handlebars = requires.Handlebars || (requires.Handlebars = require('handlebars'));
 
 /**
  * Handlebars string support. Compile the given `str` and register
@@ -76,7 +82,6 @@ engine.render = function render(str, locals, cb) {
     cb = locals;
     locals = {};
   }
-
   try {
     var fn = typeof str !== 'function'
       ? engine.compile(str, locals)
@@ -87,51 +92,6 @@ engine.render = function render(str, locals, cb) {
     cb(err);
     return;
   }
-};
-
-/**
- * Synchronously render Handlebars templates.
- *
- * ```js
- * var engine = require('engine-handlebars');
- * engine.renderSync('<%= name %>', {name: 'Jon'});
- * //=> 'Jon'
- * ```
- * @param  {Object|Function} `str` The string to render or compiled function.
- * @param  {Object} `locals`
- * @return {String} Rendered string.
- * @api public
- */
-
-engine.renderSync = function renderSync(str, locals) {
-  locals = locals || {};
-
-  try {
-    var fn = (typeof str === 'function' ? str : engine.compile(str, locals));
-    return fn(locals);
-  } catch (err) {
-    return err;
-  }
-};
-
-/**
- * Handlebars file support. Render a file at the given `path`
- * and callback `cb(err, str)`.
- *
- * ```js
- * var engine = require('engine-handlebars');
- * engine.renderSync('foo/bar/baz.tmpl', {name: 'Jon'});
- * //=> 'Jon'
- * ```
- *
- * @param {String} `path` Filepath
- * @param {Object|Function} `locals` or callback function.
- * @param {Function} `cb` callback function
- * @api public
- */
-
-engine.renderFile = function renderFile(fp, locals, cb) {
-  engine.render(fs.readFileSync(fp, 'utf8'), locals, cb);
 };
 
 /**
@@ -147,7 +107,7 @@ engine.renderFile = function renderFile(fp, locals, cb) {
  *   path: 'foo.hbs',
  *   contents: new Buffer('{{name}}')
  * });
- * engine.renderVinyl(file, {name: 'Foo'}, function (err, res) {
+ * engine.renderFile(file, {name: 'Foo'}, function (err, res) {
  *   console.log(res.contents.toString())
  *   //=> 'Foo'
  * });
@@ -158,7 +118,7 @@ engine.renderFile = function renderFile(fp, locals, cb) {
  * @api public
  */
 
-engine.renderVinyl = function renderVinyl(file, locals, cb) {
+engine.renderFile = function renderFile(file, locals, cb) {
   if (typeof locals === 'function') {
     cb = locals;
     locals = {};
@@ -182,7 +142,33 @@ engine.renderVinyl = function renderVinyl(file, locals, cb) {
 };
 
 /**
+ * Synchronously render Handlebars templates.
+ *
+ * ```js
+ * var engine = require('engine-handlebars');
+ * engine.renderSync('<%= name %>', {name: 'Jon'});
+ * //=> 'Jon'
+ * ```
+ * @param  {Object|Function} `str` The string to render or compiled function.
+ * @param  {Object} `locals`
+ * @return {String} Rendered string.
+ * @api public
+ */
+
+engine.renderSync = function renderSync(str, options) {
+  options = options || {};
+  try {
+    var fn = (typeof str === 'function' ? str : engine.compile(str, options));
+    return fn(options);
+  } catch (err) {
+    return err;
+  }
+};
+
+/**
  * Express support.
  */
 
-engine.__express = engine.renderFile;
+engine.__express = function(fp, locals, cb) {
+  engine.render(fs.readFileSync(fp, 'utf8'), locals, cb);
+};

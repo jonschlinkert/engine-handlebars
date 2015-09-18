@@ -147,25 +147,25 @@ describe('.renderSync()', function () {
 });
 
 
-describe('.renderFile()', function() {
+describe('express support', function() {
   it('should render templates from a file.', function(done) {
     var ctx = {name: 'Halle Schlinkert'};
 
-    engine.renderFile('test/fixtures/default.hbs', ctx, function (err, content) {
+    engine.__express('test/fixtures/default.hbs', ctx, function (err, content) {
       assert(content === 'Halle Schlinkert');
       done();
     });
   });
 
   it('should work when the callback is the second arg', function(done) {
-    engine.renderFile('test/fixtures/content.hbs', function (err, content) {
+    engine.__express('test/fixtures/content.hbs', function (err, content) {
       assert(content === 'Jon Schlinkert');
       done();
     });
   });
 
   it('should handle engine errors:', function(done) {
-    engine.renderFile('test/fixtures/bad.hbs', {}, function (err, content) {
+    engine.__express('test/fixtures/bad.hbs', {}, function (err, content) {
       assert(err);
       assert(typeof err === 'object');
       assert(/Parse error/.test(err.message));
@@ -174,15 +174,14 @@ describe('.renderFile()', function() {
   });
 });
 
-
-describe('.renderVinyl()', function() {
+describe('.renderFile()', function() {
   it('should render templates in a vinyl file:', function(done) {
     var vinyl = new Vinyl({
       path: 'foo.hbs',
       contents: new Buffer('foo')
     });
 
-    engine.renderVinyl(vinyl, function (err, file) {
+    engine.renderFile(vinyl, function (err, file) {
       if (err) return done(err);
       assert(Vinyl.isVinyl(file));
       assert(file.contents.toString() === 'foo');
@@ -196,7 +195,7 @@ describe('.renderVinyl()', function() {
       contents: new Buffer('{{ name }}')
     });
 
-    engine.renderVinyl(vinyl, {name: 'Handlebars'}, function (err, file) {
+    engine.renderFile(vinyl, {name: 'Handlebars'}, function (err, file) {
       if (err) return done(err);
       assert(Vinyl.isVinyl(file));
       assert(file.contents.toString() === 'Handlebars');
@@ -212,7 +211,7 @@ describe('.renderVinyl()', function() {
 
     vinyl.data = {name: 'Halle Schlinkert'};
 
-    engine.renderVinyl(vinyl, function (err, file) {
+    engine.renderFile(vinyl, function (err, file) {
       if (err) return done(err);
       assert(Vinyl.isVinyl(file));
       assert(file.contents.toString() === 'Halle Schlinkert');
@@ -228,7 +227,7 @@ describe('.renderVinyl()', function() {
 
     vinyl.data = {name: 'Halle Schlinkert'};
 
-    engine.renderVinyl(vinyl, {name: 'Handlebars'}, function (err, file) {
+    engine.renderFile(vinyl, {name: 'Handlebars'}, function (err, file) {
       if (err) return done(err);
       assert(Vinyl.isVinyl(file));
       assert(file.contents.toString() === 'Halle Schlinkert');
@@ -245,7 +244,7 @@ describe('.renderVinyl()', function() {
     vinyl.data = {name: 'Halle Schlinkert'};
     vinyl.fn = engine.compile(vinyl.contents.toString());
 
-    engine.renderVinyl(vinyl, {name: 'Handlebars'}, function (err, file) {
+    engine.renderFile(vinyl, {name: 'Handlebars'}, function (err, file) {
       if (err) return done(err);
       assert(Vinyl.isVinyl(file));
       assert(file._isVinyl);
@@ -260,7 +259,7 @@ describe('.renderVinyl()', function() {
       contents: new Buffer('{{ name }}}')
     });
 
-    engine.renderVinyl(vinyl, function (err, file) {
+    engine.renderFile(vinyl, function (err, file) {
       assert(err);
       assert(typeof err === 'object');
       assert(/Parse error/.test(err.message));
@@ -269,14 +268,14 @@ describe('.renderVinyl()', function() {
   });
 
   it('should throw an error when not an object', function(done) {
-    engine.renderVinyl('foo', function (err, file) {
+    engine.renderFile('foo', function (err, file) {
       assert(err.message === 'expected a vinyl file.');
       done();
     });
   });
 
   it('should throw an error when not a vinyl file', function(done) {
-    engine.renderVinyl({}, function (err, file) {
+    engine.renderFile({}, function (err, file) {
       assert(err.message === 'expected a vinyl file.');
       done();
     });
