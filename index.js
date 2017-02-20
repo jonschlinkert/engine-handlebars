@@ -49,8 +49,11 @@ engine.Handlebars = requires.Handlebars || (requires.Handlebars = require('handl
  */
 
 engine.compile = function compile(str, options) {
-  var handlebars = engine.Handlebars;
+  var handlebars = this.Handlebars;
   options = options || {};
+
+  initAsyncHelpers(this);
+
   for (var partial in options.partials) {
     handlebars.registerPartial(partial, options.partials[partial]);
   }
@@ -164,6 +167,97 @@ engine.renderSync = function renderSync(str, options) {
     return err;
   }
 };
+
+/**
+ * Async helper/partial handling specific to Handlebars
+ */
+
+function initAsyncHelpers(engine) {
+  if (typeof engine.asyncHelpers === 'undefined') {
+    return;
+  }
+  var handlebars = engine.Handlebars;
+  var asyncHelpers = engine.asyncHelpers;
+
+  if (typeof handlebars.helpers._invokePartial === 'function'
+    && typeof asyncHelpers.helpers._invokePartial === 'function') {
+    return;
+  }
+
+  var invokePartial = handlebars.VM.invokePartial;
+  handlebars.VM.invokePartial = function(partial, context, options) {
+    var name = options.name;
+    if (asyncHelpers.hasAsyncId(name)) {
+      // create inline helper to invoke the partial when the helper is ready
+      return handlebars.helpers._invokePartial.apply(this, arguments);
+    }
+    // return 'foo';
+    return invokePartial.apply(handlebars.VM, arguments);
+  };
+
+  /**
+   * `invokePartialWrapper` is mostly from Handlebars/runtime#invokePartialWrapper
+   * It's used here because the method is created inside a closure and inaccessible to outside code.
+   */
+
+  function invokePartialWrapper(partial, context, options) {
+    if (options.hash) {
+      context = extend({}, context, options.hash);
+      if (options.ids) {
+        options.ids[0] = true;
+      }
+    }
+
+    partial = handlebars.VM.resolvePartial.call(handlebars.VM, partial, context, options);
+    var result = handlebars.VM.invokePartial.call(handlebars.VM, partial, context, options);
+
+    if (result == null && handlebars.compile) {
+      options.partials[options.name] = handlebars.compile(partial, options);
+      result = options.partials[options.name](context, options);
+    }
+
+    if (result != null) {
+      if (options.indent) {
+        let lines = result.split('\n');
+        for (let i = 0, l = lines.length; i < l; i++) {
+          if (!lines[i] && i + 1 === l) {
+            break;
+          }
+
+          lines[i] = options.indent + lines[i];
+        }
+        result = lines.join('\n');
+      }
+      return result;
+    }
+
+    throw new Exception('The partial ' + options.name + ' could not be compiled when running in runtime-only mode');
+  }
+
+  /**
+   * Internal helper that will be used to resolve async helper ids when used with dynamic partials.
+   */
+
+  function _invokePartial(partial, context, options, cb) {
+    var id = options.name;
+    asyncHelpers.resolveIds(id, function(err, name) {
+      if (err) return cb(err);
+      options.name = name;
+      var res = '';
+      try {
+        res = invokePartialWrapper(partial, context, options);
+      } catch (err) {
+        cb(err);
+        return;
+      }
+      cb(null, res);
+    });
+  }
+
+  _invokePartial.async = true;
+  asyncHelpers.set('_invokePartial', _invokePartial);
+  handlebars.registerHelper('_invokePartial', asyncHelpers.get('_invokePartial', {wrap: true}));
+}
 
 /**
  * Express support.
