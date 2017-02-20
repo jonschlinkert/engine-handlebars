@@ -25,6 +25,7 @@
     "handlebars": "^4.0.2"
   },
   "devDependencies": {
+    "engine-cache": "^0.19.3",
     "gulp": "^3.9.0",
     "gulp-istanbul": "^0.10.0",
     "gulp-jshint": "^1.11.2",
