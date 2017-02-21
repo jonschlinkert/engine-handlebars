@@ -4,6 +4,10 @@
   "version": "0.8.0",
   "homepage": "https://github.com/jonschlinkert/engine-handlebars",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "contributors": [
+    "Brian Woodward <brian.woodward@gmail.com> (https://github.com/doowb)",
+    "Jon Schlinkert <jon.schlinkert@sellside.com> (http://twitter.com/jonschlinkert)"
+  ],
   "repository": "jonschlinkert/engine-handlebars",
   "bugs": {
     "url": "https://github.com/jonschlinkert/engine-handlebars/issues"
@@ -14,7 +18,7 @@
   ],
   "main": "index.js",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=4.7"
   },
   "scripts": {
     "test": "mocha"
@@ -34,28 +38,28 @@
     "vinyl": "^2.0.1"
   },
   "keywords": [
-    "engine",
-    "consolidate",
-    "express",
     "assemble",
+    "compile",
+    "consolidate",
+    "engine",
+    "express",
     "handlebars",
     "hbs",
     "helper",
     "partial",
-    "templates",
-    "template",
-    "compile",
+    "process",
     "render",
-    "process"
+    "template",
+    "templates"
   ],
   "verb": {
     "related": {
       "list": [
-        "template-helpers",
-        "handlebars-helpers",
         "assemble",
-        "templates",
-        "helper-cache"
+        "handlebars-helpers",
+        "helper-cache",
+        "template-helpers",
+        "templates"
       ]
     }
   }
