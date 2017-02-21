@@ -20,19 +20,19 @@
     "test": "mocha"
   },
   "dependencies": {
-    "engine-utils": "^0.1.0",
+    "engine-utils": "^0.1.1",
     "extend-shallow": "^2.0.1",
-    "handlebars": "^4.0.2"
+    "handlebars": "^4.0.6"
   },
   "devDependencies": {
-    "engine-cache": "^0.19.3",
-    "gulp": "^3.9.0",
-    "gulp-istanbul": "^0.10.0",
-    "gulp-jshint": "^1.11.2",
-    "gulp-mocha": "^2.1.3",
-    "jshint-stylish": "^2.0.1",
-    "mocha": "*",
-    "vinyl": "^0.5.3"
+    "engine-cache": "^0.19.4",
+    "gulp": "^3.9.1",
+    "gulp-istanbul": "^1.1.1",
+    "gulp-jshint": "^2.0.4",
+    "gulp-mocha": "^4.0.1",
+    "jshint-stylish": "^2.2.1",
+    "mocha": "^3.2.0",
+    "vinyl": "^2.0.1"
   },
   "keywords": [
     "engine",
