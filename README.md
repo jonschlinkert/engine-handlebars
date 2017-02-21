@@ -46,7 +46,7 @@ var engine = require('engine-handlebars');
 var fn = engine.compile('{{name}}', {});
 ```
 
-### [.render](index.js#L83)
+### [.render](index.js#L84)
 
 Handlebars string support. Render the given `str` and invoke the callback `cb(err, str)`.
 
@@ -65,7 +65,7 @@ engine.render('{{name}}', {name: 'Jon'}, function (err, content) {
 });
 ```
 
-### [.renderFile](index.js#L124)
+### [.renderFile](index.js#L125)
 
 [Vinyl](https://github.com/gulpjs/vinyl) file support. Render tempates in the `contents` of the given `file` and invoke the callback `cb(err, file)`. If the file has a `data` object, it will be merged with locals and passed to templates as context. `data` wins over `locals`.
 
@@ -89,7 +89,7 @@ engine.renderFile(file, {name: 'Foo'}, function (err, res) {
 });
 ```
 
-### [.renderSync](index.js#L161)
+### [.renderSync](index.js#L162)
 
 Synchronously render Handlebars templates.
 
@@ -149,7 +149,7 @@ $ npm install -g verbose/verb#dev verb-generate-readme && verb
 
 ### Running tests
 
-Install dev dependencies:
+Running and reviewing unit tests is a great way to get familiarized with a library and its API. You can install dependencies and run tests with the following command:
 
 ```sh
 $ npm install && npm test
@@ -165,7 +165,7 @@ $ npm install && npm test
 ### License
 
 Copyright © 2017, [Jon Schlinkert](https://github.com/jonschlinkert).
-Released under the MIT license.
+MIT
 
 ***
 
