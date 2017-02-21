@@ -1,5 +1,6 @@
 'use strict';
 
+require('mocha');
 var fs = require('fs');
 var path = require('path');
 var Vinyl = require('vinyl');
