@@ -90,7 +90,7 @@ engine.render = function render(str, locals, cb) {
       ? engine.compile(str, locals)
       : str;
 
-    cb(null,  fn(locals));
+    cb(null, fn(locals));
   } catch (err) {
     cb(err);
     return;
@@ -231,7 +231,7 @@ function initAsyncHelpers(engine) {
       return result;
     }
 
-    throw new Exception('The partial ' + options.name + ' could not be compiled when running in runtime-only mode');
+    throw new Error('The partial ' + options.name + ' could not be compiled when running in runtime-only mode');
   }
 
   /**

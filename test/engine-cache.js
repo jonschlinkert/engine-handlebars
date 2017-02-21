@@ -15,53 +15,54 @@ describe('engine-cache', function() {
     hbs = engines.getEngine('hbs');
   });
 
-  describe('.Handlebars', function () {
-    it('should expose the engine.', function () {
+  describe('.Handlebars', function() {
+    it('should expose the engine.', function() {
       var Handlebars = hbs.Handlebars;
-      assert(Handlebars.hasOwnProperty('compile'))
-      assert(Handlebars.hasOwnProperty('SafeString'))
+      assert(Handlebars.hasOwnProperty('compile'));
+      assert(Handlebars.hasOwnProperty('SafeString'));
     });
 
-    it('should expose engine options.', function () {
+    it('should expose engine options.', function() {
       assert(hbs.options.src.ext === '.hbs');
       assert(hbs.options.dest.ext === '.html');
     });
 
-    it('should allow helpers to registered with the engine.', function (done) {
+    it('should allow helpers to registered with the engine.', function(done) {
       var Handlebars = hbs.Handlebars;
-      Handlebars.registerHelper('blah', function (str) {
+      Handlebars.registerHelper('blah', function(str) {
         return str.toLowerCase();
       });
 
       var ctx = {name: 'Halle Schlinkert'};
 
-      hbs.render('{{blah name}}', ctx, function (err, content) {
+      hbs.render('{{blah name}}', ctx, function(err, content) {
+        if (err) return done(err);
         assert(content === 'halle schlinkert');
         done();
       });
     });
   });
 
-  describe('.compile()', function () {
-    it('should compile a template.', function () {
+  describe('.compile()', function() {
+    it('should compile a template.', function() {
       var fn = hbs.compile('Halle {{ name }}');
       assert(typeof fn === 'function');
     });
 
-    it('should render a template with a compiled function.', function () {
+    it('should render a template with a compiled function.', function() {
       var fn = hbs.compile('Halle {{ name }}');
       assert(typeof fn === 'function');
       assert(fn({name: 'Schlinkert'}) === 'Halle Schlinkert');
     });
 
-    it('should immediately return an already compiled function.', function () {
+    it('should immediately return an already compiled function.', function() {
       var compiled = hbs.compile('Halle {{ name }}');
       var fn = hbs.compile(compiled);
       assert(typeof fn === 'function');
       assert(fn({name: 'Schlinkert'}) === 'Halle Schlinkert');
     });
 
-    it('should async render a template with a compiled function.', function (cb) {
+    it('should async render a template with a compiled function.', function(cb) {
       var fn = hbs.compile('Halle {{ name }}');
       assert.equal(typeof hbs.Handlebars.helpers._invokePartial, 'function');
       assert.equal(typeof hbs.asyncHelpers.helpers._invokePartial, 'function');
@@ -74,11 +75,11 @@ describe('engine-cache', function() {
     });
   });
 
-
   describe('.render()', function() {
     it('should render templates in a string:', function(done) {
       var ctx = {name: 'Halle Schlinkert'};
-      hbs.render('{{ name }}', ctx, function (err, content) {
+      hbs.render('{{ name }}', ctx, function(err, content) {
+        if (err) return done(err);
         assert(content === 'Halle Schlinkert');
         done();
       });
@@ -87,7 +88,8 @@ describe('engine-cache', function() {
     it('should render templates from a compiled function:', function(done) {
       var ctx = {name: 'Halle Schlinkert'};
       var fn = hbs.compile('{{ name }}');
-      hbs.render(fn, ctx, function (err, content) {
+      hbs.render(fn, ctx, function(err, content) {
+        if (err) return done(err);
         assert(content === 'Halle Schlinkert');
         done();
       });
@@ -114,7 +116,7 @@ describe('engine-cache', function() {
       ctx.helpers = helpers;
       ctx.partials = partials;
 
-      hbs.render('{{> (upper (partial "foo"))}}', ctx, function (err, content) {
+      hbs.render('{{> (upper (partial "foo"))}}', ctx, function(err, content) {
         if (err) return cb(err);
         assert.equal(content, 'foo bar baz Halle Schlinkert baz bar foo');
         cb();
@@ -124,7 +126,8 @@ describe('engine-cache', function() {
     it('should handle async helpers and partials in templates from a compiled function:', function(done) {
       var ctx = {name: 'Halle Schlinkert'};
       var fn = hbs.compile('{{ name }}');
-      hbs.render(fn, ctx, function (err, content) {
+      hbs.render(fn, ctx, function(err, content) {
+        if (err) return done(err);
         assert(content === 'Halle Schlinkert');
         done();
       });
@@ -132,14 +135,15 @@ describe('engine-cache', function() {
 
     it('should work with no context:', function(done) {
       var fn = hbs.compile('foo');
-      hbs.render(fn, function (err, content) {
+      hbs.render(fn, function(err, content) {
+        if (err) return done(err);
         assert(content === 'foo');
         done();
       });
     });
 
     it('should handle engine errors:', function(done) {
-      hbs.render('{{foo}}}', function (err, content) {
+      hbs.render('{{foo}}}', function(err, content) {
         assert(err);
         assert(typeof err === 'object');
         assert(/Parse error/.test(err.message));
@@ -161,7 +165,7 @@ describe('engine-cache', function() {
         }
       };
 
-      hbs.render('{{upper (include "content.hbs")}}', ctx, function (err, content) {
+      hbs.render('{{upper (include "content.hbs")}}', ctx, function(err, content) {
         if (err) return done(err);
         assert(content === 'JON SCHLINKERT');
         done();
@@ -171,7 +175,7 @@ describe('engine-cache', function() {
     it('should use partials passed on the options.', function(done) {
       var ctx = {partials: {a: 'foo', b: 'bar'}};
 
-      hbs.render('{{> a }}{{> b }}', ctx, function (err, content) {
+      hbs.render('{{> a }}{{> b }}', ctx, function(err, content) {
         if (err) return done(err);
         assert(content === 'foobar');
         done();
@@ -179,13 +183,13 @@ describe('engine-cache', function() {
     });
   });
 
-  describe('.renderSync()', function () {
-    it('should render a template.', function () {
+  describe('.renderSync()', function() {
+    it('should render a template.', function() {
       var str = hbs.renderSync('Halle {{ name }}', {name: 'Schlinkert'});
       assert(str === 'Halle Schlinkert');
     });
 
-    it('should render a template from a compiled function.', function () {
+    it('should render a template from a compiled function.', function() {
       var fn = hbs.compile('Halle {{ name }}');
       var str = hbs.renderSync(fn, {name: 'Schlinkert'});
       assert(str === 'Halle Schlinkert');
@@ -194,7 +198,7 @@ describe('engine-cache', function() {
     it('should throw engine errors:', function() {
       try {
         hbs.renderSync('{{foo}}}');
-      } catch(err) {
+      } catch (err) {
         assert(err);
         assert(typeof err === 'object');
         assert(/Parse error/.test(err.message));
@@ -206,21 +210,23 @@ describe('engine-cache', function() {
     it('should render templates from a file.', function(done) {
       var ctx = {name: 'Halle Schlinkert'};
 
-      hbs.__express('test/fixtures/default.hbs', ctx, function (err, content) {
+      hbs.__express('test/fixtures/default.hbs', ctx, function(err, content) {
+        if (err) return done(err);
         assert(content === 'Halle Schlinkert');
         done();
       });
     });
 
     it('should work when the callback is the second arg', function(done) {
-      hbs.__express('test/fixtures/content.hbs', function (err, content) {
+      hbs.__express('test/fixtures/content.hbs', function(err, content) {
+        if (err) return done(err);
         assert(content === 'Jon Schlinkert');
         done();
       });
     });
 
     it('should handle engine errors:', function(done) {
-      hbs.__express('test/fixtures/bad.hbs', {}, function (err, content) {
+      hbs.__express('test/fixtures/bad.hbs', {}, function(err, content) {
         assert(err);
         assert(typeof err === 'object');
         assert(/Parse error/.test(err.message));
@@ -236,7 +242,7 @@ describe('engine-cache', function() {
         contents: new Buffer('foo')
       });
 
-      hbs.renderFile(vinyl, function (err, file) {
+      hbs.renderFile(vinyl, function(err, file) {
         if (err) return done(err);
         assert(Vinyl.isVinyl(file));
         assert(file.contents.toString() === 'foo');
@@ -250,7 +256,7 @@ describe('engine-cache', function() {
         contents: new Buffer('{{ name }}')
       });
 
-      hbs.renderFile(vinyl, {name: 'Handlebars'}, function (err, file) {
+      hbs.renderFile(vinyl, {name: 'Handlebars'}, function(err, file) {
         if (err) return done(err);
         assert(Vinyl.isVinyl(file));
         assert(file.contents.toString() === 'Handlebars');
@@ -266,7 +272,7 @@ describe('engine-cache', function() {
 
       vinyl.data = {name: 'Halle Schlinkert'};
 
-      hbs.renderFile(vinyl, function (err, file) {
+      hbs.renderFile(vinyl, function(err, file) {
         if (err) return done(err);
         assert(Vinyl.isVinyl(file));
         assert(file.contents.toString() === 'Halle Schlinkert');
@@ -282,7 +288,7 @@ describe('engine-cache', function() {
 
       vinyl.data = {name: 'Halle Schlinkert'};
 
-      hbs.renderFile(vinyl, {name: 'Handlebars'}, function (err, file) {
+      hbs.renderFile(vinyl, {name: 'Handlebars'}, function(err, file) {
         if (err) return done(err);
         assert(Vinyl.isVinyl(file));
         assert(file.contents.toString() === 'Halle Schlinkert');
@@ -299,7 +305,7 @@ describe('engine-cache', function() {
       vinyl.data = {name: 'Halle Schlinkert'};
       vinyl.fn = hbs.compile(vinyl.contents.toString());
 
-      hbs.renderFile(vinyl, {name: 'Handlebars'}, function (err, file) {
+      hbs.renderFile(vinyl, {name: 'Handlebars'}, function(err, file) {
         if (err) return done(err);
         assert(Vinyl.isVinyl(file));
         assert(file._isVinyl);
@@ -314,7 +320,7 @@ describe('engine-cache', function() {
         contents: new Buffer('{{ name }}}')
       });
 
-      hbs.renderFile(vinyl, function (err, file) {
+      hbs.renderFile(vinyl, function(err, file) {
         assert(err);
         assert(typeof err === 'object');
         assert(/Parse error/.test(err.message));
@@ -323,14 +329,14 @@ describe('engine-cache', function() {
     });
 
     it('should throw an error when not an object', function(done) {
-      hbs.renderFile('foo', function (err, file) {
+      hbs.renderFile('foo', function(err, file) {
         assert(err.message === 'expected a vinyl file.');
         done();
       });
     });
 
     it('should throw an error when not a vinyl file', function(done) {
-      hbs.renderFile({}, function (err, file) {
+      hbs.renderFile({}, function(err, file) {
         assert(err.message === 'expected a vinyl file.');
         done();
       });
