@@ -49,10 +49,11 @@ engine.Handlebars = requires.Handlebars || (requires.Handlebars = require('handl
  */
 
 engine.compile = function compile(str, options) {
-  var handlebars = this.Handlebars;
+  var instance = this || engine;
+  var handlebars = instance.Handlebars;
   options = options || {};
 
-  initAsyncHelpers(this);
+  initAsyncHelpers(instance);
 
   for (var partial in options.partials) {
     handlebars.registerPartial(partial, options.partials[partial]);
