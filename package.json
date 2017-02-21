@@ -26,11 +26,10 @@
   },
   "devDependencies": {
     "engine-cache": "^0.19.4",
-    "gulp": "^3.9.1",
+    "gulp": "github:gulpjs/gulp#4.0",
+    "gulp-eslint": "^3.0.1",
     "gulp-istanbul": "^1.1.1",
-    "gulp-jshint": "^2.0.4",
     "gulp-mocha": "^4.0.1",
-    "jshint-stylish": "^2.2.1",
     "mocha": "^3.2.0",
     "vinyl": "^2.0.1"
   },
