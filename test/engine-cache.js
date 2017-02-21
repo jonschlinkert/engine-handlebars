@@ -124,6 +124,39 @@ describe('engine-cache', function() {
       });
     });
 
+    it('should handle partials in templates from a string:', function(cb) {
+      var ctx = {name: 'Halle Schlinkert'};
+      var helpers = {
+        upper: function(str, options, cb) {
+          return cb(null, str.toUpperCase());
+        },
+        partial: function(name, options, cb) {
+          return `partial_${name}`;
+        }
+      };
+      helpers.upper.async = true;
+
+      var partials = {
+        PARTIAL_FOO: `
+foo
+  {{upper "foo"}}
+  {{name}}
+  {{> PARTIAL_BAZ }}
+  {{> (upper (partial "baz")) name="Brian Woodward"}}
+foo`,
+        PARTIAL_BAZ: 'baz {{name}} baz\n'
+      };
+
+      ctx.helpers = helpers;
+      ctx.partials = partials;
+
+      hbs.render('{{> (upper (partial "foo"))}}', ctx, function(err, content) {
+        if (err) return cb(err);
+        assert.equal(content, '\nfoo\n  FOO\n  Halle Schlinkert\n  baz Halle Schlinkert baz\n  baz Brian Woodward baz\nfoo');
+        cb();
+      });
+    });
+
     it('should handle async helpers and partials in templates from a compiled function:', function(cb) {
       var ctx = {name: 'Halle Schlinkert'};
       var fn = hbs.compile('{{ name }}');
