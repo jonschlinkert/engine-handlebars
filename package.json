@@ -32,6 +32,7 @@
     "engine-cache": "^0.19.4",
     "gulp": "github:gulpjs/gulp#4.0",
     "gulp-eslint": "^3.0.1",
+    "gulp-format-md": "^0.1.11",
     "gulp-istanbul": "^1.1.1",
     "gulp-mocha": "^3.0.1",
     "mocha": "^3.2.0",
@@ -53,6 +54,14 @@
     "templates"
   ],
   "verb": {
+    "toc": true,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
     "related": {
       "list": [
         "assemble",
@@ -61,6 +70,9 @@
         "template-helpers",
         "templates"
       ]
+    },
+    "lint": {
+      "reflinks": true
     }
   }
 }
