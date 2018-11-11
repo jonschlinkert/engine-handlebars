@@ -1,258 +1,163 @@
 'use strict';
 
-/**
- * Module dependencies.
- */
+module.exports = instance => {
+  if (instance === void 0) throw new Error('expected an instance of "handlebars"');
+  const registered = Symbol('registered');
+  const register = (app, options = {}) => {
+    if (!app) app = { cache: {} };
 
-var fs = require('fs');
-var extend = require('extend-shallow');
-var utils = require('engine-utils');
-
-/**
- * Requires cache
- */
-
-var requires = {};
-
-/**
- * Handlebars support.
- */
-
-var engine = module.exports = utils.fromStringRenderer('handlebars');
-
-/**
- * Engine options
- */
-
-engine.options = {
-  src: {ext: '.hbs'},
-  dest: {ext: '.html'}
-};
-
-/**
- * Expose `Handlebars`, to give users access to the same instance
- */
-
-engine.Handlebars = requires.Handlebars || (requires.Handlebars = require('handlebars'));
-
-/**
- * Handlebars string support. Compile the given `str` and register
- * helpers and partials from settings
- *
- * ```js
- * var engine = require('engine-handlebars');
- * var fn = engine.compile('{{name}}', {});
- * ```
- * @param {String} `str` String or compiled function.
- * @param {Object} `options` object containing optional helpers and partials
- * @api public
- */
-
-engine.compile = function compile(str, options) {
-  var instance = this || engine;
-  var handlebars = instance.Handlebars;
-  options = options || {};
-
-  initAsyncHelpers(instance);
-
-  for (var partial in options.partials) {
-    handlebars.registerPartial(partial, options.partials[partial]);
-  }
-  for (var helper in options.helpers) {
-    handlebars.registerHelper(helper, options.helpers[helper]);
-  }
-  if (typeof str === 'function') return str;
-  return handlebars.compile(str);
-};
-
-/**
- * Handlebars string support. Render the given `str` and invoke
- * the callback `cb(err, str)`.
- *
- * ```js
- * var engine = require('engine-handlebars');
- * engine.render('{{name}}', {name: 'Jon'}, function (err, content) {
- *   console.log(content); //=> 'Jon'
- * });
- * ```
- * @param {String|Function} `str` String or compiled function.
- * @param {Object|Function} `locals` or callback.
- * @param {Function} `cb` callback function.
- * @api public
- */
-
-engine.render = function render(str, locals, cb) {
-  if (typeof locals === 'function') {
-    cb = locals;
-    locals = {};
-  }
-  try {
-    var fn = typeof str !== 'function'
-      ? engine.compile(str, locals)
-      : str;
-
-    cb(null, fn(locals));
-  } catch (err) {
-    cb(err);
-    return;
-  }
-};
-
-/**
- * [Vinyl][] file support. Render tempates in the `contents`
- * of the given `file` and invoke the callback `cb(err, file)`.
- * If the file has a `data` object, it will be merged with
- * locals and passed to templates as context. `data` wins over
- * `locals`.
- *
- * ```js
- * var engine = require('engine-handlebars');
- * var file = new File({
- *   path: 'foo.hbs',
- *   contents: new Buffer('{{name}}')
- * });
- * engine.renderFile(file, {name: 'Foo'}, function (err, res) {
- *   console.log(res.contents.toString())
- *   //=> 'Foo'
- * });
- * ```
- * @param {Object} `file` Vinyl file.
- * @param {Object|Function} `locals` or callback.
- * @param {Function} `cb` callback function.
- * @api public
- */
-
-engine.renderFile = function renderFile(file, locals, cb) {
-  if (typeof locals === 'function') {
-    cb = locals;
-    locals = {};
-  }
-
-  if (typeof file !== 'object' || (!file._isVinyl && !file.isView)) {
-    return cb(new Error('expected a vinyl file.'));
-  }
-
-  var str = typeof file.fn !== 'function'
-    ? file.contents.toString()
-    : file.fn;
-
-  var ctx = extend({}, locals, file.data);
-  engine.render(str, ctx, function(err, res) {
-    if (err) return cb(err);
-
-    file.contents = new Buffer(res);
-    cb(null, file);
-  });
-};
-
-/**
- * Synchronously render Handlebars templates.
- *
- * ```js
- * var engine = require('engine-handlebars');
- * engine.renderSync('<%= name %>', {name: 'Jon'});
- * //=> 'Jon'
- * ```
- * @param  {Object|Function} `str` The string to render or compiled function.
- * @param  {Object} `locals`
- * @return {String} Rendered string.
- * @api public
- */
-
-engine.renderSync = function renderSync(str, options) {
-  options = options || {};
-  try {
-    var fn = (typeof str === 'function' ? str : engine.compile(str, options));
-    return fn(options);
-  } catch (err) {
-    return err;
-  }
-};
-
-/**
- * Async helper/partial handling specific to Handlebars
- */
-
-function initAsyncHelpers(engine) {
-  if (typeof engine.asyncHelpers === 'undefined') {
-    return;
-  }
-  var handlebars = engine.Handlebars;
-  var asyncHelpers = engine.asyncHelpers;
-
-  if (typeof handlebars.helpers._invokePartial === 'function'
-    && typeof asyncHelpers.helpers._invokePartial === 'function') {
-    return;
-  }
-
-  var invokePartial = handlebars.VM.invokePartial;
-  handlebars.VM.invokePartial = function(partial, context, options) {
-    var name = options.name;
-    if (asyncHelpers.hasAsyncId(name)) {
-      // create inline helper to invoke the partial when the helper is ready
-      return handlebars.helpers._invokePartial.apply(this, arguments);
+    if (options.helpers) {
+      instance.registerHelper(options.helpers);
     }
-    // return 'foo';
-    return invokePartial.apply(handlebars.VM, arguments);
+
+    if (options.partials) {
+      instance.registerPartial(options.partials);
+    }
+
+    if (options.registerPartials === false) return;
+    if (!instance[registered] && app.cache.partials) {
+      instance[registered] = true;
+      instance.registerPartial(app.cache.partials);
+    }
   };
 
   /**
-   * `invokePartialWrapper` is mostly from Handlebars/runtime#invokePartialWrapper
-   * It's used here because the method is created inside a closure and inaccessible to outside code.
+   * Engine
    */
 
-  function invokePartialWrapper(partial, context, options) {
-    if (options.hash) {
-      context = extend({}, context, options.hash);
-      if (options.ids) {
-        options.ids[0] = true;
+  const engine = {
+    name: 'handlebars',
+    instance,
+
+    /**
+     * Compile `file.contents` with `handlebars.compile()`. Adds a compiled
+     * `.fn()` property to the given `file`.
+     *
+     * ```js
+     * engine.compile({ contents: 'Jon {{ name }}' })
+     *   .then(file => {
+     *     console.log(typeof file.fn) // 'function'
+     *   });
+     * ```
+     * @name .compile
+     * @param {Object} `file` File object with `contents` string or buffer.
+     * @param {Object} `options` Options with partials and helpers.
+     * @return {Promise}
+     * @api public
+     */
+
+    async compile(file, options) {
+      return engine.compileSync(file, options);
+    },
+
+    /**
+     * Render `file.contents` with the function returned from `.compile()`.
+     *
+     * ```js
+     * engine.render({ contents: 'Jon {{ name }}' }, { name: 'Schlinkert' })
+     *   .then(file => {
+     *     console.log(file.contents.toString()) // 'Jon Schlinkert'
+     *   });
+     * ```
+     * @name .render
+     * @param {Object} `file` File object with `contents` string or buffer.
+     * @param {Object} `locals` Locals to use as contents to render the string.
+     * @param {Object} `options` Options with partials and helpers.
+     * @return {Promise}
+     * @api public
+     */
+
+    async render(file, locals, options) {
+      if (typeof file === 'string') file = { contents: Buffer.from(file) };
+      let thisArg = this === engine ? { cache: {} } : this;
+      let opts = { ...locals, ...options };
+      register(thisArg, opts);
+
+      // resolve dynamic partials
+      if (opts.asyncHelpers === true && thisArg.ids) {
+        let resolvePartial = instance.VM.resolvePartial.bind(instance.VM);
+        instance.VM.resolvePartial = (name, context, options) => {
+          let tok = this.ids.get(name);
+          if (tok) {
+            let opts = tok.options || {};
+            let args = tok.args.concat(opts);
+            name = tok.fn(...args);
+          }
+          return resolvePartial(name, context, options);
+        };
       }
-    }
 
-    partial = handlebars.VM.resolvePartial.call(handlebars.VM, partial, context, options);
-    var result = handlebars.VM.invokePartial.call(handlebars.VM, partial, context, options);
+      let data = Object.assign({}, locals, file.data);
+      data.file = file;
+      data.app = this;
 
-    if (result == null && handlebars.compile) {
-      options.partials[options.name] = handlebars.compile(partial, options);
-      result = options.partials[options.name](context, options);
-    }
+      if (!file.fn) await this.compile(file, opts);
+      let res = await file.fn(data);
+      let str = this.resolveIds ? await this.resolveIds(res) : res;
+      file.contents = Buffer.from(str);
+      return file;
+    },
 
-    if (result != null) {
-      return result;
-    }
+    /**
+     * Compile `file.contents` with `handlebars.compile()`. Adds a compiled
+     * `.fn()` property to the given `file`.
+     *
+     * ```js
+     * let file = engine.compileSync({ contents: 'Jon {{ name }}' });
+     * console.log(typeof file.fn) // 'function'
+     * ```
+     * @name .compileSync
+     * @param {Object} `file` File object with `contents` string or buffer.
+     * @param {Object} `options` Options with partials and helpers.
+     * @return {Object} Returns the file object.
+     * @api public
+     */
 
-    throw new Error('The partial ' + options.name + ' could not be compiled when running in runtime-only mode');
-  }
+    compileSync(file, options = {}) {
+      if (typeof file === 'string') file = { contents: Buffer.from(file) };
+      let { recompile, registerPartials } = options;
 
-  /**
-   * Internal helper that will be used to resolve async helper ids when used with dynamic partials.
-   */
-
-  function _invokePartial(partial, context, options, cb) {
-    var id = options.name;
-    asyncHelpers.resolveIds(id, function(err, name) {
-      if (err) return cb(err);
-      options.name = name;
-      var res = '';
-      try {
-        res = invokePartialWrapper(partial, context, options);
-      } catch (err) {
-        cb(err);
-        return;
+      if (typeof file.fn !== 'function' || recompile === true) {
+        file.fn = instance.compile(file.contents.toString(), options);
       }
-      cb(null, res);
-    });
-  }
 
-  _invokePartial.async = true;
-  asyncHelpers.set('_invokePartial', _invokePartial);
-  handlebars.registerHelper('_invokePartial', asyncHelpers.get('_invokePartial', {wrap: true}));
-}
+      if (registerPartials === false) return file;
+      if (file.kind === 'partial' && !instance.partials[file.key]) {
+        instance.registerPartial(file.key, file.fn);
+      }
+      return file;
+    },
 
-/**
- * Express support.
- */
+    /**
+     * Render `file.contents` with the function returned from `.compile()`.
+     *
+     * ```js
+     * let file = engine.renderSync({ contents: 'Jon {{ name }}' }, { name: 'Schlinkert' });
+     * console.log(file.contents.toString()) // 'Jon Schlinkert'
+     * ```
+     * @name .renderSync
+     * @param {Object} `file` File object with `contents` string or buffer.
+     * @param {Object} `locals` Locals to use as contents to render the string.
+     * @param {Object} `options` Options with partials and helpers.
+     * @return {Object} Returns the file object.
+     * @api public
+     */
 
-engine.__express = function(fp, locals, cb) {
-  engine.render(fs.readFileSync(fp, 'utf8'), locals, cb);
+    renderSync(file, locals, options) {
+      if (typeof file === 'string') file = { contents: Buffer.from(file) };
+      let thisArg = this === engine ? { cache: {}, ids: new Map() } : this;
+      let opts = { ...locals, ...options };
+      register(thisArg, opts);
+
+      let data = Object.assign({}, locals, file.data);
+      data.file = file;
+      data.app = this;
+
+      if (!file.fn) this.compile(file, opts);
+      file.contents = Buffer.from(file.fn(data));
+      return file;
+    }
+  };
+
+  return engine;
 };

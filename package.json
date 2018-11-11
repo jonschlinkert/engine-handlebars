@@ -18,25 +18,15 @@
   ],
   "main": "index.js",
   "engines": {
-    "node": ">=4.7"
+    "node": ">=8"
   },
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {
-    "engine-utils": "^0.1.1",
-    "extend-shallow": "^2.0.1",
-    "handlebars": "^4.0.6"
-  },
   "devDependencies": {
-    "engine-cache": "^0.19.4",
-    "gulp": "github:gulpjs/gulp#4.0",
-    "gulp-eslint": "^3.0.1",
-    "gulp-format-md": "^0.1.11",
-    "gulp-istanbul": "^1.1.1",
-    "gulp-mocha": "^3.0.1",
-    "mocha": "^3.2.0",
-    "vinyl": "^2.0.1"
+    "gulp-format-md": "^1.0.0",
+    "handlebars": "^4.0.12",
+    "mocha": "^5.2.0"
   },
   "keywords": [
     "assemble",
@@ -54,7 +44,7 @@
     "templates"
   ],
   "verb": {
-    "toc": true,
+    "toc": false,
     "layout": "default",
     "tasks": [
       "readme"
@@ -66,7 +56,6 @@
       "list": [
         "assemble",
         "handlebars-helpers",
-        "helper-cache",
         "template-helpers",
         "templates"
       ]
