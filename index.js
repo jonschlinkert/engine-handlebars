@@ -1,25 +1,18 @@
 'use strict';
 
-module.exports = instance => {
-  if (instance === void 0) throw new Error('expected an instance of "handlebars"');
-  const registered = Symbol('registered');
-  const register = (app, options = {}) => {
-    if (!app) app = { cache: {} };
+const typeOf = require('kind-of');
+const kRegistered = Symbol('registered');
 
-    if (options.helpers) {
-      instance.registerHelper(options.helpers);
-    }
+module.exports = handlebars => {
+  if (!handlebars) {
+    try {
+      handlebars = require('handlebars'); // lint-deps-disable-line
+    } catch (err) { /* ignore */ }
+  }
 
-    if (options.partials) {
-      instance.registerPartial(options.partials);
-    }
-
-    if (options.registerPartials === false) return;
-    if (!instance[registered] && app.cache.partials) {
-      instance[registered] = true;
-      instance.registerPartial(app.cache.partials);
-    }
-  };
+  if (handlebars === undefined) {
+    throw new Error('expected an instance of "handlebars"');
+  }
 
   /**
    * Engine
@@ -27,7 +20,35 @@ module.exports = instance => {
 
   const engine = {
     name: 'handlebars',
-    instance,
+
+    register(app, options = {}) {
+      if (!app) app = {};
+      if (!app.cache) app.cache = {};
+
+      if (app.cache.helpers) engine.registerHelper(app.cache.helpers);
+      if (options.helpers) engine.registerHelper(options.helpers);
+      if (options.partials) engine.registerPartial(options.partials);
+
+      if (options.registerPartials === false) return;
+      if (app.cache.partials && !handlebars[kRegistered]) {
+        handlebars[kRegistered] = true;
+        engine.registerPartial(app.cache.partials);
+      }
+    },
+
+    helper(...args) {
+      handlebars.registerHelper(...args);
+    },
+    registerHelper(...args) {
+      handlebars.registerHelper(...args);
+    },
+
+    partial(...args) {
+      handlebars.registerPartial(...args);
+    },
+    registerPartial(...args) {
+      handlebars.registerPartial(...args);
+    },
 
     /**
      * Compile `file.contents` with `handlebars.compile()`. Adds a compiled
@@ -68,33 +89,37 @@ module.exports = instance => {
      */
 
     async render(file, locals, options) {
-      if (typeof file === 'string') file = { contents: Buffer.from(file) };
-      let thisArg = this === engine ? { cache: {} } : this;
-      let opts = { ...locals, ...options };
-      register(thisArg, opts);
+      if (typeOf(file) !== 'object') file = { contents: Buffer.from(file) };
+
+      if (!file.contents) {
+        await this.compile(file, options);
+        return file;
+      }
+
+      const thisArg = this === engine ? { cache: {} } : this;
+      const opts = { ...locals, ...options };
+      engine.register(thisArg, opts);
 
       // resolve dynamic partials
       if (opts.asyncHelpers === true && thisArg.ids) {
-        let resolvePartial = instance.VM.resolvePartial.bind(instance.VM);
-        instance.VM.resolvePartial = (name, context, options) => {
-          let tok = this.ids.get(name);
-          if (tok) {
-            let opts = tok.options || {};
-            let args = tok.args.concat(opts);
-            name = tok.fn(...args);
+        const resolvePartial = handlebars.VM.resolvePartial.bind(handlebars.VM);
+        handlebars.VM.resolvePartial = (name, context, options) => {
+          const token = this.ids.get(name);
+          if (token) {
+            const opts = token.options || {};
+            const args = token.args.concat(opts);
+            name = token.fn(...args);
           }
           return resolvePartial(name, context, options);
         };
       }
 
-      let data = Object.assign({}, locals, file.data);
-      data.file = file;
-      data.app = this;
+      const data = { ...locals, ...file.data, file, app: this };
 
       if (!file.fn) await this.compile(file, opts);
-      let res = await file.fn(data);
-      let str = this.resolveIds ? await this.resolveIds(res) : res;
-      file.contents = Buffer.from(str);
+      const res = await file.fn(data);
+      const contents = this.resolveIds ? await this.resolveIds(res) : res;
+      file.contents = Buffer.from(contents);
       return file;
     },
 
@@ -114,16 +139,18 @@ module.exports = instance => {
      */
 
     compileSync(file, options = {}) {
-      if (typeof file === 'string') file = { contents: Buffer.from(file) };
-      let { recompile, registerPartials } = options;
+      if (typeOf(file) !== 'object') file = { contents: Buffer.from(file) };
 
-      if (typeof file.fn !== 'function' || recompile === true) {
-        file.fn = instance.compile(file.contents.toString(), options);
+      const { recompile, registerPartials } = options;
+
+      if (!file.contents) {
+        file.fn = () => file.contents;
+      } else if (typeof file.fn !== 'function' || recompile === true) {
+        file.fn = handlebars.compile(file.contents.toString(), options);
       }
 
-      if (registerPartials === false) return file;
-      if (file.kind === 'partial' && !instance.partials[file.key]) {
-        instance.registerPartial(file.key, file.fn);
+      if (file.key && file.kind === 'partial' && registerPartials !== false) {
+        handlebars.registerPartial(file.key, file.fn);
       }
       return file;
     },
@@ -144,18 +171,28 @@ module.exports = instance => {
      */
 
     renderSync(file, locals, options) {
-      if (typeof file === 'string') file = { contents: Buffer.from(file) };
-      let thisArg = this === engine ? { cache: {}, ids: new Map() } : this;
-      let opts = { ...locals, ...options };
-      register(thisArg, opts);
+      if (typeOf(file) !== 'object') file = { contents: Buffer.from(file) };
 
-      let data = Object.assign({}, locals, file.data);
-      data.file = file;
-      data.app = this;
+      if (!file.contents) {
+        this.compileSync(file, options);
+        return file;
+      }
 
-      if (!file.fn) this.compile(file, opts);
+      const thisArg = this === engine ? { cache: {}, ids: new Map() } : this;
+      const opts = { ...locals, ...options };
+      engine.register(thisArg, opts);
+
+      const data = { ...locals, ...file.data, file, app: this };
+      this.compile(file, opts);
       file.contents = Buffer.from(file.fn(data));
       return file;
+    },
+
+    set instance(value) {
+      handlebars = value;
+    },
+    get instance() {
+      return handlebars;
     }
   };
 

@@ -23,10 +23,13 @@
   "scripts": {
     "test": "mocha"
   },
+  "dependencies": {
+    "kind-of": "^6.0.3"
+  },
   "devDependencies": {
-    "gulp-format-md": "^1.0.0",
-    "handlebars": "^4.0.12",
-    "mocha": "^5.2.0"
+    "gulp-format-md": "^2.0.0",
+    "handlebars": "^4.7.6",
+    "mocha": "^8.1.1"
   },
   "keywords": [
     "assemble",
